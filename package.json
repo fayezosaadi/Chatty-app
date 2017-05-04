@@ -46,6 +46,7 @@
     "webpack-dev-server": "1.14.1"
   },
   "dependencies": {
+    "body-parser": "^1.17.1",
     "react": "15.2.1",
     "react-dom": "15.2.1"
   }

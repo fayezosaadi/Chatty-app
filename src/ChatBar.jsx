@@ -3,7 +3,7 @@ import React, { PropTypes, Component} from 'react';
 class ChatBar extends Component {
   static propTypes = {
     currentUser: PropTypes.string.isRequired,
-    addMessage: PropTypes.func.isRequired
+    sendMessage: PropTypes.func.isRequired
   }
 
   constructor(props) {
@@ -22,7 +22,7 @@ class ChatBar extends Component {
 
   handleKeyPress = (event) => {
     if(event.key == 'Enter'){
-      this.props.addMessage(this.state.content)
+      this.props.sendMessage(this.state.content)
       this.state.content = '';
     }
   }
