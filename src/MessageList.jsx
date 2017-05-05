@@ -7,6 +7,7 @@ class MessageList extends Component {
     handleServerNotification: React.PropTypes.func.isRequired,
     notification: React.PropTypes.string.isRequired
   }
+  
   render() {
     const messages = this.props.messages.map(message => (
       <Message
@@ -18,9 +19,6 @@ class MessageList extends Component {
     return (
       <main className="messages">
         { messages }
-        <div className="message system">
-          {this.props.notification} 
-        </div>
       </main>
     );
   }

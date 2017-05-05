@@ -24,7 +24,7 @@ class App extends Component {
           break;
         }
         case 'incomingNotification': {
-          this.handleServerNotification(msg.content)
+          this.handleServerNotification(msg)
           break;
         }
         case 'onlineusers':
@@ -55,7 +55,7 @@ class App extends Component {
   }
   
   makeNotification(content) {
-    return { type: 'postNotification', content: `${this.state.currentUser.name} has changed their name to   ${content}`};
+    return { type: 'postNotification', username: null, content: `${this.state.currentUser.name} has changed their name to ${content}`};
   }
   
   handleServerNewMessage = (content, username) => {
@@ -64,8 +64,9 @@ class App extends Component {
     this.setState({ messages });
   }
 
-  handleServerNotification = (content) => {
-    this.setState({ notification: content});
+  handleServerNotification = (notification) => {
+    const messages = this.state.messages.concat(notification)
+    this.setState({ messages });
   }
   
   handleOnlineUsers = (msg) => {

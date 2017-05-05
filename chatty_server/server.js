@@ -27,7 +27,7 @@ function handleMessage(data) {
     }
     case 'postNotification':
       delete clientMessage.type;
-      let serverNotification = _.merge({ type: 'incomingNotification' } ,clientMessage);
+      let serverNotification = _.merge({ type: 'incomingNotification' },{id:uuidV1()} ,clientMessage);
       broadcast(serverNotification);
       break;
     default: {

@@ -52,6 +52,10 @@ body {
   padding: 0 10px;
 }
 
+.message.system .message-username {
+  display: none;
+}
+
 .message-content {
   flex: 8;
 }
