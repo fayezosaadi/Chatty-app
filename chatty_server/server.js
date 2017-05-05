@@ -1,24 +1,14 @@
-// server.js
-const express = require('express');
-const SocketServer = require('ws').Server;
-// const bodyParser = require('body-parser');
-
-// Set the port to 3001
-const PORT = 3001;
-
-// Create a new express server
+const express = require('express')
+const SocketServer = require('ws').Server
+const PORT = 3001
 const server = express()
-// server.use(bodyParser.urlencoded({ extended: false }))
 
-// Make the express server serve static assets (html, javascript, css) from the /public folder
 .use(express.static('public'))
 .listen(PORT, '0.0.0.0', 'localhost', () => console.log(`Listening on ${ PORT }`));
 
-// Create the WebSockets server
 const wss = new SocketServer({ server });
-
-const uuidV1 = require('uuid/v1');
-
+const _ = require ('lodash')
+const uuidV1 = require('uuid/v1')
 
 function broadcast(data) {
   for(let ws of wss.clients) {
@@ -26,27 +16,37 @@ function broadcast(data) {
   }
 }
 
-let msg = '';
-// triggering a message and who sent it?
 function handleMessage(data) {
-  var msg = JSON.parse(data);
-  msg['id']=uuidV1();
-  console.log(msg);
-  console.log('Message received!! ', msg);
-  broadcast(msg);
+  let clientMessage = JSON.parse(data);
+  switch(clientMessage.type) {
+    case 'postMessage': {
+      delete clientMessage.type;
+      let serverMessage = _.merge({ type: 'incomingMessage' }, { id: uuidV1()},clientMessage);
+      broadcast(serverMessage);
+      break;
+    }
+    case 'postNotification':
+      delete clientMessage.type;
+      let serverNotification = _.merge({ type: 'incomingNotification' } ,clientMessage);
+      broadcast(serverNotification);
+      break;
+    default: {
+      throw new Error('Unknown event type ' + data.type);
+    }
+  }
 }
 
-
-// Set up a callback that will run when a client connects to the server
-// When a client connects they are assigned a socket, represented by
-// the ws parameter in the callback.
 wss.on('connection', (ws) => {
-  console.log('New Client connected');
-  console.log('We are at ' + wss.clients.size + ' clients!');
+  let onlineUsers = {type: 'onlineusers', number: wss.clients.size};
+  
+  broadcast(onlineUsers);
+  
   ws.on('message', handleMessage);
-
-  // Set up a callback for when a client closes the socket. This usually means they closed their browser.
-  ws.on('close', () => console.log('Client disconnected'));
+  
+  ws.on('close', () => {
+    let onlineUsers = {type: 'onlineusers', number: wss.clients.size};
+    broadcast(onlineUsers);
+  })
 });
 
 
