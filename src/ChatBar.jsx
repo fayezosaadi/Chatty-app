@@ -2,14 +2,16 @@ import React, { PropTypes, Component} from 'react';
 
 class ChatBar extends Component {
   static propTypes = {
-    currentUser: PropTypes.string.isRequired,
-    sendMessage: PropTypes.func.isRequired
+    currentUser: PropTypes.object.isRequired,
+    sendMessage: PropTypes.func.isRequired,
+    sendNotification:PropTypes.func.isRequired,
+    handleUserName: PropTypes.func.isRequired
   }
-
+  
   constructor(props) {
     super(props);
     this.state = {
-      userName: props.currentUser,
+      username: '',
       content: ''
     }
   }
@@ -19,18 +21,38 @@ class ChatBar extends Component {
       content: event.target.value
     });
   }
-
-  handleKeyPress = (event) => {
-    if(event.key == 'Enter'){
-      this.props.sendMessage(this.state.content)
-      this.state.content = '';
-    }
+  
+  onUser = (event) => {
+    this.setState({
+      username: event.target.value
+    });
   }
 
-  render() {
+  handleKeyPress = (event) => {
+    if (event.key == 'Enter'){
+      this.props.sendMessage(this.state.content)
+      this.setState({
+        content: ''
+      });
+    }
+  }
+  
+  handleSubmitNotification = (event) => {
+    if (event.key == 'Enter'){
+      this.props.sendNotification(this.state.username)
+    }
+  }
+  
+  render = () => {
     return (
-        <footer className ='chatbar'>
-          <input className='chatbar-username' placeholder={this.state.userName} />
+      <footer className ='chatbar'>
+        <input
+          className='chatbar-username' 
+          placeholder={this.props.currentUser.name} 
+          onKeyPress={this.handleSubmitNotification}
+          onChange={this.onUser}
+          value={this.state.username}
+          />
           <input
             className='chatbar-message'
             placeholder='Type a message and hit ENTER'
@@ -38,8 +60,9 @@ class ChatBar extends Component {
             onChange={this.onContent}
             value={this.state.content}
             />
-        </footer>
+      </footer>
     );
   }
 }
+
 export default ChatBar

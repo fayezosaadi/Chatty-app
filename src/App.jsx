@@ -1,97 +1,102 @@
 import React, {Component} from 'react';
-
 import ChatBar from './ChatBar.jsx';
 import MessageList from './MessageList.jsx';
 
-class App extends Component {
-  // constructor(props) {
-  //   super(props);
-
-
-  //   this.state = {
-  //     currentUser: {name: 'Bob'}, // optional. if currentUser is not defined, it means the user is Anonymous
-  //     messages: [
-  //       this.makeMessage('Has anyone seen my marbles?', 'Bob'),
-  //       this.makeMessage('No, I think you lost them. You lost your marbles Bob. You lost them for good.', 'Anonymous')
-  //     ]
-  //   };
-  // }
-  
+class App extends Component {  
   constructor(props) {
     super(props);
-      
-    this.id = 1;
-    
     this.state = {
-      currentUser: {name: 'Bob'},
-      messages: [] // messages coming from the server will be stored here as they arrive
+      currentUser: {name: 'anonymous'},
+      messages: [],
+      notification:'', 
+      onlineUsers:''
     };
   }
-  
+
   componentDidMount() {
-    // console.log('componentDidMount <App />');
-    // setTimeout(() => {
-    //   console.log('Simulating incoming message');
-    //   // Add a new message to the list of messages in the data store
-    //   const newMessage = {id: 3, username: 'Michelle', content: 'Hello there!'};
-    //   const messages = this.state.messages.concat(newMessage)
-    //   // Update the state of the app component.
-    //   // Calling setState will trigger a call to render() in App and all child components.
-    //   this.setState({messages: messages})
-    // }, 3000);
-
-    //In order to communicate using the WebSocket protocol, you need to create a WebSocket object
     this.ws = new WebSocket('ws://localhost:3001')
-    console.log('Connected to server')
+    this.ws.onopen = () => {}
+    this.ws.onmessage = (event) => {
+      let msg = JSON.parse(event.data);
+      switch(msg.type) {
+        case 'incomingMessage': {
+          this.handleServerNewMessage(msg.content, msg.username)
+          break;
+        }
+        case 'incomingNotification': {
+          this.handleServerNotification(msg.content)
+          break;
+        }
+        case 'onlineusers':
+          this.handleOnlineUsers(msg.number)
+          break;
+        default: {
+        throw new Error('Unknown event type ' + msg.type);
+        }
+      }
+    }
+  }
 
-    //Establishthe connection and send the message 
-    this.ws.onopen = (evt) => {
-      console.log('Established connection!', evt);
-      this.setupApp();
-    }
-    // reciving the messgae from server
-    this.ws.onmessage = (evt) => {
-      console.log('On message called! ', evt);
-      var msg = JSON.parse(event.data);
-      this.handleServerNewMessage(msg.content, msg.username)
-    }
+  sendMessageToServer = (content) => {
+    const message = this.makeMessage(content);
+    this.ws.send(JSON.stringify(message));
   }
-  
-  //Sending the last message ()
-  setupApp() {
-    const newMessage = this.makeMessage();
-    console.log('sending up data: ' + newMessage);
-    this.ws.send(JSON.stringify(newMessage));
-    console.log('-----');
-  }
-  
+
   makeMessage(content, username = this.state.currentUser.name) {
-    return { username, content };
+    return { type: 'postMessage', username, content };
   }
 
+  sendNotificationToServer = (content) => {
+    if (content !== this.state.currentUser.name) {
+      const notification = this.makeNotification(content);
+      this.handleUserName(content);
+      this.ws.send(JSON.stringify(notification));
+    }
+  }
+  
+  makeNotification(content) {
+    return { type: 'postNotification', content: `${this.state.currentUser.name} has changed their name to   ${content}`};
+  }
+  
   handleServerNewMessage = (content, username) => {
     const addMessage = this.makeMessage(content, username);
     const messages = this.state.messages.concat(addMessage)
     this.setState({ messages });
   }
+
+  handleServerNotification = (content) => {
+    this.setState({ notification: content});
+  }
   
-  sendMessageToServer = (content) => {
-    const message = this.makeMessage(content);
-    this.ws.send(JSON.stringify(message));
+  handleOnlineUsers = (msg) => {
+    this.setState({ onlineUsers: msg });
+  }
+  
+  handleUserName = (username) => {
+    this.setState({
+      currentUser: {
+        name: username
+      }
+    });
   }
   
   render() {
-    console.log('Rendering <App/>');
+    const userText = (this.state.onlineUsers > 1 ? 'users' : 'user');
     return (
       <div>
         <nav className='navbar'>
           <a href='/' className='navbar-brand'>Chatty</a>
+          <div className='connected'> {this.state.onlineUsers} {userText} online</div>
         </nav>
-        <MessageList messages={this.state.messages}/>
-        <ChatBar currentUser={this.state.currentUser.name} sendMessage={this.sendMessageToServer}/>
+        <MessageList messages={this.state.messages} notification={this.state.notification}/>
+        <ChatBar handleUserName={this.handleUserName} currentUser={this.state.currentUser} sendMessage={this.sendMessageToServer} sendNotification={this.sendNotificationToServer}/>
       </div>
-      )
+    )
   }
 }
 
 export default App;
+  
+
+
+
