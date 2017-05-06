@@ -8,7 +8,6 @@ class App extends Component {
     this.state = {
       currentUser: {name: 'anonymous'},
       messages: [],
-      notification:'', 
       onlineUsers:''
     };
   }

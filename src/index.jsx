@@ -1,5 +1,3 @@
-// Application entrypoint.
-
 require('../styles/application.scss');
 
 import React from 'react';

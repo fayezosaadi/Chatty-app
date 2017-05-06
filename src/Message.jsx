@@ -1,6 +1,10 @@
-import React, {Component} from 'react';
+import React, { PropTypes, Component} from 'react';
 
 class Message extends Component {
+  static propTypes = {
+    username: PropTypes.string.isRequired,
+    content: PropTypes.string.isRequired
+  }
   render() {
     let messageClass = 'message';
     if (this.props.username === null){
