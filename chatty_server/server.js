@@ -7,7 +7,6 @@ const server = express()
 .listen(PORT, '0.0.0.0', 'localhost', () => console.log(`Listening on ${ PORT }`));
 
 const wss = new SocketServer({ server });
-const _ = require ('lodash')
 const uuidV1 = require('uuid/v1')
 
 function broadcast(data) {
@@ -18,31 +17,18 @@ function broadcast(data) {
 
 function handleMessage(data) {
   let clientMessage = JSON.parse(data);
-  switch(clientMessage.type) {
-    case 'postMessage': {
-      delete clientMessage.type;
-      let serverMessage = _.merge({ type: 'incomingMessage' }, { id: uuidV1()},clientMessage);
-      broadcast(serverMessage);
-      break;
-    }
-    case 'postNotification':
-      delete clientMessage.type;
-      let serverNotification = _.merge({ type: 'incomingNotification' },{id:uuidV1()} ,clientMessage);
-      broadcast(serverNotification);
-      break;
-    default: {
-      throw new Error('Unknown event type ' + data.type);
-    }
-  }
+  clientMessage.id = uuidV1();
+  clientMessage.type = clientMessage.type.replace('post', 'incoming');
+  broadcast(clientMessage);
 }
 
 wss.on('connection', (ws) => {
   let onlineUsers = {type: 'onlineusers', number: wss.clients.size};
-  
+
   broadcast(onlineUsers);
-  
+
   ws.on('message', handleMessage);
-  
+
   ws.on('close', () => {
     let onlineUsers = {type: 'onlineusers', number: wss.clients.size};
     broadcast(onlineUsers);
